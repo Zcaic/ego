@@ -87,45 +87,6 @@ class Surrogate2Callback(ca.Callback):
                 y_jac = self.output_der(x)
                 return [y_jac]
 
-            def has_jacobian(self_jac):
-                return True
-
-            def get_jacobian(self_jac, name, inames, onames, opts):
-                class HessFun(ca.Callback):
-                    def __init__(self_hess, opts={}):
-                        ca.Callback.__init__(self_hess)
-                        self_hess.construct(name, opts)
-
-                    def get_n_in(self_hess):
-                        return 3
-
-                    def get_n_out(self_hess):
-                        return 2
-
-                    def get_sparsity_in(self_hess, i):
-                        if i == 0:
-                            return ca.Sparsity.dense(self.surrogate.nx, 1)
-                        elif i == 1:
-                            return ca.Sparsity.dense(1, 1)
-                        elif i == 2:
-                            return ca.Sparsity.dense(1, self.surrogate.nx)
-
-                    def get_sparsity_out(self_hess, i):
-                        if i == 0:
-                            return ca.Sparsity.dense(self.surrogate.nx, self.surrogate.nx)
-                        elif i == 1:
-                            return ca.Sparsity.dense(self.surrogate.nx, 1)
-
-                    def eval(self_hess, args):
-                        x = args[0]
-                        x = x.toarray()
-                        ddy_ddx = self.output_der(x)
-                        ddy_dxy = ca.GenDM_zeros(self.surrogate.nx, 1)
-                        return [ddy_ddx, ddy_dxy]
-
-                self_jac.jac_callback = HessFun()
-                return self_jac.jac_callback
-
         self.jac_callback = JacFun()
         return self.jac_callback
 
@@ -151,8 +112,8 @@ if __name__ == "__main__":
     obj = sm_predict(x)
     opti.maximize(obj)
     sol = opti.solve(options={"ipopt.hessian_approximation": "limited-memory"})
-    xopt=sol(x)
-    yopt=sol(obj)
+    xopt = sol(x)
+    yopt = sol(obj)
     print(sol(x), sol(obj))
 
     # num = 100
@@ -166,4 +127,3 @@ if __name__ == "__main__":
     # fig.update_layout()
     # fig.show(config={"scrollZoom":True})
     # fig.write_html("./fig.html",config={"scrollZoom":True},auto_open=True)
-
